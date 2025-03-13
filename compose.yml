@@ -1,0 +1,200 @@
+
+version: '3'
+services:
+
+  # Jellyfin
+  jellyfin:
+    container_name: jellyfin
+    image: lscr.io/linuxserver/jellyfin:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Warsaw
+      - JELLYFIN_PublishedServerUrl=http://myjelly.local #optional
+    volumes:
+      - ${DOCKER}/jellyfin/config:/config
+      - ${DOCKER}/jellyfin/cache:/cache
+      - ${MEDIA}:/data/media
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    # devices: # iGPU passthrough
+      # - /dev/dri:/dev/dri
+
+  # qBitTorrent
+  # A torrent client for downloading media
+  qbittorrent:
+    container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Warsaw
+      - WEBUI_PORT=8085
+      - TORRENTING_PORT=6881
+    volumes:
+      - ${DOCKER}/qbittorrent/config:/config
+      - ${TORRENTS}:/data/torrents #optional
+    ports:
+      - 8085:8085
+      - 6881:6881
+      - 6881:6881/udp
+
+  # Sonarr
+  # A TV series manager for grabing, sorting and organizing new series
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - prowlarr
+      - qbittorrent
+    volumes:
+      - ${DOCKER}/sonarr/config:/config
+      # Media volumes are organized using this guide:
+      # https://wiki.servarr.com/docker-guide#consistent-and-well-planned-paths
+      - ${DATA}:/data
+    ports:
+      - 8989:8989
+
+  # Radarr
+  # A movie collection manager for grabing and downloading movies
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - prowlarr
+      - qbittorrent
+    volumes:
+      - ${DOCKER}/radarr/config:/config
+      # Media volumes are organized using this guide:
+      # https://wiki.servarr.com/docker-guide#consistent-and-well-planned-paths
+      - ${DATA}:/data
+    ports:
+      - 7878:7878
+
+  # Prowlarr
+  # Indexer manager/proxy for torrent trackers
+  prowlarr:
+    container_name: prowlarr
+    image: lscr.io/linuxserver/prowlarr:latest
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+    volumes:
+      - ${DOCKER}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+
+  # Bazarr
+  # Companion that manages and downloads subtitles based on your requirements
+  bazarr:
+    container_name: bazarr
+    image: lscr.io/linuxserver/bazarr:latest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ${DOCKER}/bazarr/config:/config
+      - ${DATA}:/data
+    ports:
+      - 6767:6767
+
+  # Lingarr
+  # Service fot machine translations for  movies and tv-series subtitles
+  lingarr:
+    container_name: lingarr
+    image: lingarr/lingarr:latest
+    restart: unless-stopped
+    volumes:
+      - ${DATA}:/data
+      - ${DOCKER}/lingarr/config:/app/config
+    ports:
+      - 7676:8080
+
+  # Jellyseerr
+  # Nice app for requesting new content
+  jellyseerr:
+    container_name: jellyseerr
+    image: fallenbagel/jellyseerr:latest
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=Europe/Warsaw
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - ${DOCKER}/jellyseerr/config:/app/config
+
+  # Trailarr
+  # A tool download and manage trailers for Radarr and Sonarr libraries
+  trailarr:
+    container_name: trailarr
+    image: nandyalu/trailarr:nightly
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WEBUI_DISABLE_AUTH=True
+    volumes:
+      - ${DOCKER}/trailarr/config:/config
+      - ${DATA}:/data
+    ports:
+      - 7889:7889
+
+  # Maintainerr
+  # Cleaning up (un)watched media
+  # maintainerr:
+  #   container_name: maintainerr
+  #   image: ghcr.io/jorenn92/maintainerr:latest
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   volumes:
+  #     - ${DOCKER}/maintainerr:/opt/data
+  #   ports:
+  #     - 6246:6246
+
+  # Tautulli
+  # A monitoring and tracking tool for Plex Media Server
+  # tautulli:
+  #   container_name: tautulli
+  #   image: ghcr.io/tautulli/tautulli
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   volumes:
+  #     - ${DOCKER}/tautulli:/config
+  #   ports:
+  #     - 8181:8181
+
+  # Samba
+  # Remote access to the file system
+  # samba:
+  #   container_name: samba
+  #   image: dperson/samba
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   environment:
+  #     USERID: ${PUID}
+  #     GROUPID: ${PGID}
+  #   volumes:
+  #     - ..:/mnt/smart-home
+  #     - ${MEDIA_VOLUME}:/mnt/media
+  #   ports:
+  #     - 139:139
+  #     - 445:445
+  #     - 137:137/udp
+  #     - 138:138/udp
+  #   command: >
+  #     samba.sh
+  #       -s "media;/mnt/media;yes;no;no;all"
+  #       -s "smart-home;/mnt/smart-home;yes;no;no;all"
+  #       -u "${SAMBA_USER};${SAMBA_PASSWORD}"
+
