@@ -5,11 +5,11 @@ services:
     container_name: jellyfin
     image: lscr.io/linuxserver/jellyfin:latest
     restart: unless-stopped
+    env_file: media-server.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - JELLYFIN_PublishedServerUrl=http://myjelly.local #optional
     volumes:
       - ${DOCKER}/jellyfin/config:/config
       - ${DOCKER}/jellyfin/cache:/cache
@@ -20,13 +20,14 @@ services:
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
     # devices: # iGPU passthrough
-    # - /dev/dri:/dev/dri
+      - /dev/dri:/dev/dri
 
   # qBitTorrent
   qbittorrent:
     container_name: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
+    env_file: media-server.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -46,6 +47,7 @@ services:
     container_name: sonarr
     image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
+    env_file: media-server.env
     depends_on:
       - prowlarr
       - qbittorrent
@@ -60,6 +62,7 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     restart: unless-stopped
+    env_file: media-server.env
     depends_on:
       - prowlarr
       - qbittorrent
@@ -74,6 +77,7 @@ services:
     container_name: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
+    env_file: media-server.env
     depends_on:
       - qbittorrent
     volumes:
@@ -81,33 +85,12 @@ services:
     ports:
       - 9696:9696
 
-  # Bazarr
-  bazarr:
-    container_name: bazarr
-    image: lscr.io/linuxserver/bazarr:latest
-    restart: unless-stopped
-    volumes:
-      - ${DOCKER}/bazarr/config:/config
-      - ${DATA}:/data
-    ports:
-      - 6767:6767
-
-  # Lingarr
-  lingarr:
-    container_name: lingarr
-    image: lingarr/lingarr:latest
-    restart: unless-stopped
-    volumes:
-      - ${DATA}:/data
-      - ${DOCKER}/lingarr/config:/app/config
-    ports:
-      - 7676:8080
-
   # Jellyseerr
   jellyseerr:
     container_name: jellyseerr
     image: fallenbagel/jellyseerr:latest
     restart: unless-stopped
+    env_file: media-server.env
     environment:
       - LOG_LEVEL=debug
       - TZ=${TZ}
@@ -116,3 +99,26 @@ services:
       - 5055:5055
     volumes:
       - ${DOCKER}/jellyseerr/config:/app/config
+
+  # Bazarr
+  # bazarr:
+  #   container_name: bazarr
+  #   image: lscr.io/linuxserver/bazarr:latest
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DOCKER}/bazarr/config:/config
+  #     - ${DATA}:/data
+  #   ports:
+  #     - 6767:6767
+
+  # Lingarr
+  # lingarr:
+  #   container_name: lingarr
+  #   image: lingarr/lingarr:latest
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DATA}:/data
+  #     - ${DOCKER}/lingarr/config:/app/config
+  #   ports:
+  #     - 7676:8080
+
