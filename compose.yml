@@ -1,5 +1,6 @@
 version: "3"
 services:
+
   # Jellyfin
   jellyfin:
     container_name: jellyfin
@@ -99,6 +100,26 @@ services:
       - 5055:5055
     volumes:
       - ${DOCKER}/jellyseerr/config:/app/config
+
+
+  filebrowser:
+    container_name: filebrowser
+    image: filebrowser/filebrowser:v2.23.0
+    restart: unless-stopped
+    env_file: media-server.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    hostname: filebrowser
+    ports:
+      - target: 80
+        published: "10180"
+        protocol: tcp
+    volumes:
+      - ${DOCKER}/filebrowser/db:/db
+      - ${HOME}:/srv
+    network_mode: bridge
 
   # Bazarr
   # bazarr:
