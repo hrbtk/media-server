@@ -1,7 +1,5 @@
-
-version: '3'
+version: "3"
 services:
-
   # Jellyfin
   jellyfin:
     container_name: jellyfin
@@ -10,7 +8,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Warsaw
+      - TZ=${TZ}
       - JELLYFIN_PublishedServerUrl=http://myjelly.local #optional
     volumes:
       - ${DOCKER}/jellyfin/config:/config
@@ -22,10 +20,9 @@ services:
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
     # devices: # iGPU passthrough
-      # - /dev/dri:/dev/dri
+    # - /dev/dri:/dev/dri
 
   # qBitTorrent
-  # A torrent client for downloading media
   qbittorrent:
     container_name: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -33,7 +30,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Warsaw
+      - TZ=${TZ}
       - WEBUI_PORT=8085
       - TORRENTING_PORT=6881
     volumes:
@@ -45,7 +42,6 @@ services:
       - 6881:6881/udp
 
   # Sonarr
-  # A TV series manager for grabing, sorting and organizing new series
   sonarr:
     container_name: sonarr
     image: lscr.io/linuxserver/sonarr:latest
@@ -55,14 +51,11 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER}/sonarr/config:/config
-      # Media volumes are organized using this guide:
-      # https://wiki.servarr.com/docker-guide#consistent-and-well-planned-paths
       - ${DATA}:/data
     ports:
       - 8989:8989
 
   # Radarr
-  # A movie collection manager for grabing and downloading movies
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -72,14 +65,11 @@ services:
       - qbittorrent
     volumes:
       - ${DOCKER}/radarr/config:/config
-      # Media volumes are organized using this guide:
-      # https://wiki.servarr.com/docker-guide#consistent-and-well-planned-paths
       - ${DATA}:/data
     ports:
       - 7878:7878
 
   # Prowlarr
-  # Indexer manager/proxy for torrent trackers
   prowlarr:
     container_name: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
@@ -92,7 +82,6 @@ services:
       - 9696:9696
 
   # Bazarr
-  # Companion that manages and downloads subtitles based on your requirements
   bazarr:
     container_name: bazarr
     image: lscr.io/linuxserver/bazarr:latest
@@ -104,7 +93,6 @@ services:
       - 6767:6767
 
   # Lingarr
-  # Service fot machine translations for  movies and tv-series subtitles
   lingarr:
     container_name: lingarr
     image: lingarr/lingarr:latest
@@ -116,30 +104,15 @@ services:
       - 7676:8080
 
   # Jellyseerr
-  # Nice app for requesting new content
   jellyseerr:
     container_name: jellyseerr
     image: fallenbagel/jellyseerr:latest
     restart: unless-stopped
     environment:
       - LOG_LEVEL=debug
-      - TZ=Europe/Warsaw
+      - TZ=${TZ}
       - PORT=5055 #optional
     ports:
       - 5055:5055
     volumes:
       - ${DOCKER}/jellyseerr/config:/app/config
-
-  # Trailarr
-  # A tool download and manage trailers for Radarr and Sonarr libraries
-  trailarr:
-    container_name: trailarr
-    image: nandyalu/trailarr:nightly
-    restart: unless-stopped
-    environment:
-      - WEBUI_DISABLE_AUTH=True
-    volumes:
-      - ${DOCKER}/trailarr/config:/config
-      - ${DATA}:/data
-    ports:
-      - 7889:7889
