@@ -6,7 +6,6 @@ services:
     container_name: jellyfin
     image: lscr.io/linuxserver/jellyfin:latest
     restart: unless-stopped
-    env_file: media-server.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -28,7 +27,6 @@ services:
     container_name: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
-    env_file: media-server.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -48,7 +46,6 @@ services:
     container_name: sonarr
     image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
-    env_file: media-server.env
     depends_on:
       - prowlarr
       - qbittorrent
@@ -63,7 +60,6 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     restart: unless-stopped
-    env_file: media-server.env
     depends_on:
       - prowlarr
       - qbittorrent
@@ -78,7 +74,6 @@ services:
     container_name: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
-    env_file: media-server.env
     depends_on:
       - qbittorrent
     volumes:
@@ -91,7 +86,6 @@ services:
     container_name: jellyseerr
     image: fallenbagel/jellyseerr:latest
     restart: unless-stopped
-    env_file: media-server.env
     environment:
       - LOG_LEVEL=debug
       - TZ=${TZ}
@@ -101,12 +95,24 @@ services:
     volumes:
       - ${DOCKER}/jellyseerr/config:/app/config
 
+  # Homearr
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - ${DOCKER}/homarr:/appdata
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY}
+    ports:
+      - 7575:7575
 
+  # FileBrowser
   filebrowser:
     container_name: filebrowser
     image: filebrowser/filebrowser:v2.23.0
     restart: unless-stopped
-    env_file: media-server.env
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
