@@ -127,6 +127,18 @@ services:
       - ${HOME}:/srv
     network_mode: bridge
 
+  # HomeAssistant
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    volumes:
+      - ${DOCKER}/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    privileged: true
+    network_mode: host
+
   # Bazarr
   # bazarr:
   #   container_name: bazarr
