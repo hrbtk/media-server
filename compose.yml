@@ -124,7 +124,7 @@ services:
         protocol: tcp
     volumes:
       - ${DOCKER}/filebrowser/db:/db
-      - ${HOME}:/srv
+      - /:/srv
     network_mode: bridge
 
   # HomeAssistant
