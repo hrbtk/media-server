@@ -1,5 +1,4 @@
 services:
-
   # Jellyfin
   jellyfin:
     container_name: jellyfin
@@ -13,6 +12,7 @@ services:
       - ${DOCKER}/jellyfin/config:/config
       - ${DOCKER}/jellyfin/cache:/cache
       - ${MEDIA}:/data/media
+      - /opt/vc/lib:/opt/vc/lib
     ports:
       - 8096:8096
       - 8920:8920 #optional
@@ -139,9 +139,7 @@ services:
       - TZ=${TZ}
     hostname: filebrowser
     ports:
-      - target: 80
-        published: "10180"
-        protocol: tcp
+      - 10180:80
     volumes:
       - ${DOCKER}/filebrowser/db:/db
       - /:/srv
@@ -158,6 +156,48 @@ services:
   #     - /run/dbus:/run/dbus:ro
   #   privileged: true
   #   network_mode: host
+
+  # Vaultwarden
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+      - SIGNUPS_ALLOWED=true #change to false after register
+    hostname: vaultwarden
+    ports:
+      - 10380:80
+    volumes:
+      - ${DOCKER}/vaultwarden/data:/data
+
+  # Vaultwarden backup
+  vaultwarden-backup:
+    image: ttionya/vaultwarden-backup:latest
+    restart: always
+    environment:
+      RCLONE_REMOTE_NAME: ${RCLONE_REMOTE_NAME}
+      RCLONE_REMOTE_DIR: ${RCLONE_REMOTE_DIR}
+      ZIP_PASSWORD: ${ZIP_PASSWORD}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}
+      TIMEZONE: ${TZ}
+    volumes:
+      - ${DOCKER}/vaultwarden/data:/bitwarden/data/
+      - ${HOME}/.config/rclone:/config/
+
+  # Nginx Proxy Manager
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    hostname: nginx-proxy-manager
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    volumes:
+      - ${DOCKER}/npm/data:/data
+      - ${DOCKER}/npm/letsencrypt:/etc/letsencrypt
 
   # Bazarr
   # bazarr:
@@ -180,4 +220,3 @@ services:
   #     - ${DOCKER}/lingarr/config:/app/config
   #   ports:
   #     - 7676:8080
-
