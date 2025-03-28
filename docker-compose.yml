@@ -1,0 +1,6 @@
+include:
+  - path: "media/docker-compose.yml"
+  - path: "network/docker-compose.yml"
+  - path: "support/docker-compose.yml"
+  - path: "vaultwarden/docker-compose.yml"
+  - path: "linkwarden/docker-compose.yml"

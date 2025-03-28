@@ -1,0 +1,37 @@
+name: network
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "7300:80/tcp"
+      - "443:443/tcp"
+      # For DHCP server
+      #- "67:67/udp"
+    environment:
+      TZ: ${TZ}
+      FTLCONF_webserver_api_password: ${PI_PASSWORD}
+      FTLCONF_dns_listeningMode: "all"
+    volumes:
+      - ${DOCKER}/pihole:/etc/pihole"
+    # See https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    # For DHCP server
+    # cap_add:
+    # - NET_ADMIN
+
+  # Nginx Proxy Manager
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    hostname: nginx-proxy-manager
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    volumes:
+      - ${DOCKER}/npm/data:/data
+      - ${DOCKER}/npm/letsencrypt:/etc/letsencrypt

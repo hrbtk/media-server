@@ -1,0 +1,29 @@
+name: vaultwarden
+services:
+  # Vaultwarden
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+      - SIGNUPS_ALLOWED=true #change to false after register
+    hostname: vaultwarden
+    ports:
+      - 10380:80
+    volumes:
+      - ${DOCKER}/vaultwarden/data:/data
+
+  # Vaultwarden backup
+  vaultwarden-backup:
+    image: ttionya/vaultwarden-backup:latest
+    restart: always
+    environment:
+      RCLONE_REMOTE_NAME: ${RCLONE_REMOTE_NAME}
+      RCLONE_REMOTE_DIR: ${RCLONE_REMOTE_DIR}
+      ZIP_PASSWORD: ${ZIP_PASSWORD}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}
+      TIMEZONE: ${TZ}
+    volumes:
+      - ${DOCKER}/vaultwarden/data:/bitwarden/data/
+      - ${HOME}/.config/rclone:/config/

@@ -1,0 +1,88 @@
+name: support
+services:
+  # Portainer CE
+  # Managing containers via nice web UI
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    restart: unless-stopped
+    ports:
+      - 8000:8000 # Agent
+      - 9000:9000 # Web UI
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER}/portainer/data:/data
+
+  # Homearr
+  # Homepage
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    environment:
+      SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY}
+    ports:
+      - 7575:7575
+    volumes:
+      - ${DOCKER}/homarr:/appdata
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Dash.
+  # System monitor
+  dash:
+    container_name: dash
+    image: mauricenino/dashdot:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - 3001:3001
+    volumes:
+      - /:/mnt/host:ro
+    environment:
+      DASHDOT_ENABLE_CPU_TEMPS: "true"
+      DASHDOT_ALWAYS_SHOW_PERCENTAGES: "true"
+      DASHDOT_WIDGET_LIST: "os,cpu,storage,ram,network"
+      DASHDOT_OS_LABEL_LIST: "os,arch,up_since"
+      DASHDOT_CPU_LABEL_LIST: "brand,model,cores,threads,frequency"
+      DASHDOT_STORAGE_LABEL_LIST: "brand,size,type"
+      DASHDOT_RAM_LABEL_LIST: "brand,size,type,frequency"
+      DASHDOT_NETWORK_LABEL_LIST: "type,speed_up,speed_down,interface_speed"
+      DASHDOT_GPU_LABEL_LIST: "brand, model, memory"
+
+  # FileBrowser
+  filebrowser:
+    container_name: filebrowser
+    image: filebrowser/filebrowser:v2.23.0
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    hostname: filebrowser
+    ports:
+      - 10180:80
+    volumes:
+      - ${DOCKER}/filebrowser/db:/db
+      - /:/srv
+    network_mode: bridge
+
+  # Watchtower TODO
+  # A solution for automating Docker container base image updates
+  # watchtower:
+  #   container_name: watchtower
+  #   image: containrrr/watchtower
+  #   restart: unless-stopped
+  #   environment:
+  #     WATCHTOWER_CLEANUP: 'true'
+  #     WATCHTOWER_WARN_ON_HEAD_FAILURE: 'never'
+  #     WATCHTOWER_NO_STARTUP_MESSAGE: 'true'
+  #     WATCHTOWER_SCHEDULE: '0 0 5 * * 6'
+  #     WATCHTOWER_NOTIFICATIONS: email
+  #     WATCHTOWER_NOTIFICATION_EMAIL_FROM: ${EMAIL_SERVER_ADDRESS}
+  #     WATCHTOWER_NOTIFICATION_EMAIL_TO: ${EMAIL_SERVER_ADDRESS}
+  #     WATCHTOWER_NOTIFICATION_EMAIL_SERVER: ${EMAIL_SERVER}
+  #     WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT: ${EMAIL_SERVER_PORT}
+  #     WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER: ${EMAIL_SERVER_USER}
+  #     WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD}
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
