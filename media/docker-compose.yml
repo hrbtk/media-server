@@ -3,28 +3,7 @@ services:
   # Jellyfin
   jellyfin:
     container_name: jellyfin
-    image: lscr.io/linuxserver/jellyfin:latest
-    restart: unless-stopped
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${DOCKER}/jellyfin/config:/config
-      - ${DOCKER}/jellyfin/cache:/cache
-      - ${MEDIA}:/data/media
-      - /opt/vc/lib:/opt/vc/lib
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
-    devices: # iGPU passthrough
-      - /dev/dri:/dev/dri
-
-  jellyfin-nvidia:
-    container_name: jellyfin-nvidia
-    image: lscr.io/linuxserver/jellyfin
+    image: jellyfin/jellyfin
     restart: unless-stopped
     environment:
       - PUID=${PUID}
@@ -33,19 +12,20 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - ${DOCKER}/jellyfin/config:/config
+      - ${DOCKER}/jellyfin/cache:/cache
       - ${MEDIA}:/data/media
     ports:
-      - 8097:8096
-      - 8921:8920
-      # - 7359:7359/udp #optional
-      # - 1900:1900/udp #optional
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
     runtime: nvidia
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
 
   # qBitTorrent
@@ -60,7 +40,7 @@ services:
       - WEBUI_PORT=8085
       - TORRENTING_PORT=6881
     volumes:
-      - ${DOCKER}/qbittorrent/config:/config
+      - ${DOCKER}/qBittorrent:/config/qBittorrent
       - ${TORRENTS}:/data/torrents #optional
     ports:
       - 8085:8085

@@ -26,4 +26,4 @@ services:
       TIMEZONE: ${TZ}
     volumes:
       - ${DOCKER}/vaultwarden/data:/bitwarden/data/
-      - ${HOME}/.config/rclone:/config/
+      - ${CONFIG}:/config/
